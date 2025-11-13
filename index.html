@@ -8,7 +8,7 @@
 <link rel="icon" type="image/x-icon" href="icon.ico">
 <link rel="shortcut icon" href="icon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" href="icon.png">
-	
+    
 <script src="jadwalsholat.js"></script>
 <script src="quotes.js"></script>
 
@@ -17,7 +17,6 @@ html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:#000;
 body{display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
 #mainText{font-size:clamp(32px,8vw,80px);font-weight:700;line-height:1.2;margin-bottom:20px;margin-top:80px}
 #mainText span{color:#FFAA00;font-weight:400}
-#intervalText{font-size:26px;color:#fff;margin-bottom:20px}
 .progress {
 width: 80vw; /* PERBAIKAN: 80vw dari lebar layar */
 height: 30px;
@@ -74,10 +73,6 @@ color: #fff;
 
 body.dark #mainText span {
 color: #ffb74d; /* oranye lembut */
-}
-
-body.dark #intervalText {
-color: #bbb;
 }
 
 body.dark #quote {
@@ -187,34 +182,92 @@ color: inherit;
 z-index: 101;
 }
 
+/* Style untuk jadwal sholat */
+#prayer-schedule {
+display: flex;
+justify-content: space-between;
+width: 80vw;
+margin: 20px auto;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 10px;
+padding: 15px;
+}
 
+.prayer-time {
+text-align: center;
+flex: 1;
+}
+
+.prayer-name {
+font-size: 16px;
+margin-bottom: 5px;
+color: #FFAA00;
+}
+
+.prayer-clock {
+font-size: 24px;
+font-weight: bold;
+}
+
+/* Media query untuk layar kecil */
 @media (max-width: 600px) {
 #center-clock{
 visibility:hidden;
 display: none;
 }
-#intervalText{
-	font-size:X-large;
-}
 #quote{
-	font-size:X-large;
-	margin-top:20px;
-	margin-bottom:-30px;	
+    font-size:X-large;
+    margin-top:20px;
+    margin-bottom:-30px;	
+}
+#prayer-schedule {
+    flex-direction: column;
+    gap: 10px;
+}
+.prayer-time {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.prayer-name {
+    margin-bottom: 0;
+    margin-right: 10px;
 }
 }
-
 </style>
 </head>
 <body class="dark">
 <main>
 <div id="quote">"Quotes & Jadwal disini"</div>
 <div id="mainText"><strong>—</strong><span><i></i></span></div>
-<div id="intervalText">—</div>
 <div class="progress"><i id="intervalProgress"></i></div>
+
+<!-- Jadwal Sholat 5 Waktu -->
+<div id="prayer-schedule">
+    <div class="prayer-time">
+        <div class="prayer-name">SUBUH</div>
+        <div class="prayer-clock" id="subuh-time">--:--</div>
+    </div>
+    <div class="prayer-time">
+        <div class="prayer-name">DHUHUR</div>
+        <div class="prayer-clock" id="dhuhur-time">--:--</div>
+    </div>
+    <div class="prayer-time">
+        <div class="prayer-name">ASHAR</div>
+        <div class="prayer-clock" id="ashar-time">--:--</div>
+    </div>
+    <div class="prayer-time">
+        <div class="prayer-name">MAGRIB</div>
+        <div class="prayer-clock" id="magrib-time">--:--</div>
+    </div>
+    <div class="prayer-time">
+        <div class="prayer-name">ISYA</div>
+        <div class="prayer-clock" id="isya-time">--:--</div>
+    </div>
+</div>
 
 <span><div class="status-bar" style="color:gray;margin-top:0px;margin-bottom:30px;font-size: 12px;">
 <span >📅 JADWAL SHOLAT KABPUATEN SLEMAN YOGAKARTA</span>
-
 </div></span>
 
 <!-- PERBAIKAN: Tambahkan jam di tengah halaman -->
@@ -231,7 +284,6 @@ display: none;
 
 <!-- Grafik Jadwal Sholat -->
 <div id="chart-container">
-
 <div id="chart"></div>
 <div class="month-labels">
 <span class="month-label">JAN</span>
@@ -249,9 +301,11 @@ display: none;
 </div>
 </div>
 
+<!-- Audio untuk adzan -->
+<audio id="adzan-audio" src="adzan.mp3" preload="auto"></audio>
+
 <script>
 const TZ = 'Asia/Jakarta';
-const IQOMAH_MIN = 15 * 60000;
 const pad = n => String(n).padStart(2, '0');
 const fmtHM = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
 const nowJakarta = () => new Date(new Date().toLocaleString('en-US', {
@@ -283,12 +337,6 @@ return new Date(`${y}-${M}-${D}T${pad(h)}:${pad(m)}:00+07:00`);
 
 function getTodayTimes(d) {
 return (typeof prayerTimesData !== 'undefined') ? prayerTimesData[getKey(d)] : null;
-}
-
-// Fungsi untuk mengecek apakah waktu sholat memiliki iqomah
-function hasIqomah(prayerName) {
-// Terbit tidak memiliki iqomah
-return !prayerName.toLowerCase().includes('terbit');
 }
 
 function buildPrayers(now) {
@@ -399,8 +447,25 @@ document.getElementById('center-date').textContent = `${day} ${month} ${year}`;
 }
 
 // =============================
+// UPDATE JADWAL SHOLAT 5 WAKTU
+// =============================
+function updatePrayerSchedule() {
+const now = nowJakarta();
+const today = getTodayTimes(now);
+if (today) {
+document.getElementById('subuh-time').textContent = today.Shubuh;
+document.getElementById('dhuhur-time').textContent = today.Dzuhur;
+document.getElementById('ashar-time').textContent = today.Ashr;
+document.getElementById('magrib-time').textContent = today.Maghrib;
+document.getElementById('isya-time').textContent = today.Isya;
+}
+}
+
+// =============================
 // JADWAL SHOLAT
 // =============================
+let lastAdzanTime = null; // Untuk melacak kapan terakhir kali adzan diputar
+
 function updateAll() {
 const now = nowJakarta();
 const prayers = buildPrayers(now).filter(p => !isNaN(p.when));
@@ -409,35 +474,16 @@ document.getElementById('mainText').innerHTML = '<strong>Jadwal tidak tersedia</
 return;
 }
 
+// Update jadwal sholat 5 waktu
+updatePrayerSchedule();
+
 // default prev/next
 let { prev, next } = findPrevNext(prayers, now);
 
-// cek apakah kita sedang dalam waktu iqomah (hanya untuk sholat yang memiliki iqomah)
-const currentAdzan = prayers.find(p => {
-if (!hasIqomah(p.name)) return false; // Lewatkan jika tidak ada iqomah
-const start = p.when;
-const end = new Date(start.getTime() + IQOMAH_MIN);
-return now >= start && now < end;
-});
-
-// kalau sedang iqomah, gunakan currentAdzan sbg next sementara
-let upcoming = currentAdzan || next;
-
-// kalau pakai currentAdzan, prev harus prayer sebelumnya
-if (currentAdzan) {
-const idx = prayers.indexOf(currentAdzan);
-if (idx > 0) {
-prev = prayers[idx - 1];
-} else {
-// fallback ke sholat terakhir kemarin
-const ylist = buildPrayers(new Date(now.getTime() - 86400000));
-if (ylist.length) prev = ylist[ylist.length - 1];
-}
-}
+// Hapus konsep iqomah - fokus hanya pada adzan
+let upcoming = next;
 
 const adzanTime = upcoming.when;
-// Hanya tambahkan iqomah jika waktu sholat memiliki iqomah
-const iqomahEnd = hasIqomah(upcoming.name) ? new Date(adzanTime.getTime() + IQOMAH_MIN) : adzanTime;
 const mainEl = document.getElementById('mainText');
 
 // PERBAIKAN: Hapus kelas blink-text sebelum update
@@ -458,69 +504,71 @@ const prayerText = upcoming.name.toLowerCase().includes('terbit') ?
 
 mainEl.innerHTML = `<strong>${hh > 0 ? hh + " Jam " : ""}${mm} menit </strong><span><i>${prayerText}</i></span>`;
     
-    // PERBAIKAN: Tambahkan kelas blink-text jika kurang dari 15 menit dan memiliki iqomah
-    if (diff < 15 * 60 * 1000 && hasIqomah(upcoming.name)) {
+    // PERBAIKAN: Tambahkan kelas blink-text jika kurang dari 15 menit
+    if (diff < 15 * 60 * 1000) {
         const mainTextStrong = mainEl.querySelector('strong');
         if (mainTextStrong) {
             mainTextStrong.classList.add('blink-text');
         }
     }
-} else if (now >= adzanTime && now < iqomahEnd && hasIqomah(upcoming.name)) {
-// dalam waktu iqomah (hanya untuk sholat yang memiliki iqomah)
-const diff = Math.ceil((iqomahEnd - now) / 60000);
-mainEl.innerHTML = `<strong>${diff} menit</strong><span><i> lagi iqomah ${upcoming.name}</i></span>`;
+} else {
+// setelah adzan - langsung tampilkan countdown ke sholat berikutnya
+// Cari sholat berikutnya setelah yang baru saja lewat
+const nextPrayers = prayers.filter(p => p.when > now);
+if (nextPrayers.length > 0) {
+    const nextPrayer = nextPrayers[0];
+    const diff = nextPrayer.when - now;
+    const hh = Math.floor(diff / 3600000);
+    const mm = Math.floor((diff % 3600000) / 60000);
     
-    // PERBAIKAN: Tambahkan kelas blink-text untuk iqomah
-    const mainTextStrong = mainEl.querySelector('strong');
-    if (mainTextStrong) {
-        mainTextStrong.classList.add('blink-text');
+    const prayerText = nextPrayer.name.toLowerCase().includes('terbit') ?
+    `menuju ${nextPrayer.name}` : `lagi adzan ${nextPrayer.name}`;
+    
+    mainEl.innerHTML = `<strong>${hh > 0 ? hh + " Jam " : ""}${mm} menit </strong><span><i>${prayerText}</i></span>`;
+    
+    // PERBAIKAN: Tambahkan kelas blink-text jika kurang dari 15 menit
+    if (diff < 15 * 60 * 1000) {
+        const mainTextStrong = mainEl.querySelector('strong');
+        if (mainTextStrong) {
+            mainTextStrong.classList.add('blink-text');
+        }
     }
 } else {
-// lewat iqomah
-mainEl.innerHTML = '<strong>Menunggu</strong><span><i> jadwal berikutnya…</i></span>';
+    // Tidak ada sholat berikutnya hari ini
+    mainEl.innerHTML = '<strong>Menunggu</strong><span><i> jadwal besok…</i></span>';
+}
 }
 
 // interval progress
 if (prev && upcoming) {
-const intervalText = document.getElementById('intervalText');
 const deltaMs = now - prev.when;
 const deltaH = Math.floor(deltaMs / 3600000);
 const deltaM = Math.floor((deltaMs % 3600000) / 60000);
 
-// ✨ Tambah info Tahajud
-let tahajudInfo = '';
-const besok = new Date(now.getTime() + 86400000);
-const prayersBesok = buildPrayers(besok);
-const nextSubuhBesok = prayersBesok.find(p => p.name.toLowerCase().includes('subuh'));
-if (nextSubuhBesok) {
-const tahajudTime = new Date(nextSubuhBesok.when);
-tahajudTime.setHours(4, 0, 0, 0); // jam 04:00 besok
-const diffTahajud = Math.round((nextSubuhBesok.when - tahajudTime) / 60000);
-tahajudInfo = ` • ⏳ <strong>Tahajud</strong> ${diffTahajud} menit (Subuh Besok ${nextSubuhBesok.hm})`;
-}
-
-intervalText.innerHTML =
-`⏱️ <strong>${prev.name}</strong> lewat ${deltaH > 0 ? deltaH + ':' : ''}${deltaM} • 🕌 <strong>${upcoming.name}</strong> ${upcoming.hm}${tahajudInfo}`;
-
 // Update progress bar berdasarkan detik jam saat ini
 updateProgressBarBySeconds();
 
-// PERBAIKAN: Tambahkan efek rush jika kurang dari 15 menit lagi dan memiliki iqomah
+// PERBAIKAN: Tambahkan efek rush jika kurang dari 15 menit lagi
 const progressBar = document.querySelector('.progress');
 const timeUntilNext = upcoming.when - now;
-if (timeUntilNext < 15 * 60 * 1000 && timeUntilNext > 0 && hasIqomah(upcoming.name)) {
+if (timeUntilNext < 15 * 60 * 1000 && timeUntilNext > 0) {
 progressBar.classList.add('rush');
 } else {
 progressBar.classList.remove('rush');
 }
 
-// PERBAIKAN: Juga tambahkan efek rush saat sedang iqomah
-if (now >= adzanTime && now < iqomahEnd && hasIqomah(upcoming.name)) {
-progressBar.classList.add('rush');
-}
-
 // Update grafik untuk sholat berikutnya
 updateChartForNextPrayer(upcoming.name);
+
+// PERBAIKAN: Mainkan adzan saat waktu sholat tiba
+if (now >= adzanTime && now < new Date(adzanTime.getTime() + 60000)) {
+    // Cek apakah sudah memainkan adzan untuk waktu sholat ini
+    if (lastAdzanTime === null || lastAdzanTime.getTime() !== adzanTime.getTime()) {
+        const audio = document.getElementById('adzan-audio');
+        audio.play().catch(e => console.log('Gagal memutar adzan:', e));
+        lastAdzanTime = new Date(adzanTime); // Simpan waktu adzan terakhir
+    }
+}
 }
 }
 

@@ -63,7 +63,7 @@ animation: blinkText 1s infinite;
 100% { opacity: 1; }
 }
 
-#quote{margin-top:-20px;font-size:32px;color:#adadad;max-width:900wh;white-space:pre-line;margin-left:auto;margin-right:auto}
+#quote{margin-top:0px;font-size:22px;color:#adadad;max-width:900wh;white-space:pre-line;margin-left:auto;margin-right:auto}
 
 /* Dark mode */
 body.dark {
@@ -147,25 +147,27 @@ border-radius: 50%;
 
 /* PERBAIKAN: Tambahkan style untuk jam di tengah halaman */
 #center-clock {
-position: absolute;
-top: 10px;
-left: 50%;
-transform: translateX(-50%);
-font-size: 24px;
-font-weight: normal;
-color: #fff;
-z-index: 100;
-display: flex;
-align-items: center;
-gap: 8px;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 100;
+  color: #fff;
 }
 
-#center-clock .time-icon {
-color: #FFAA00;
+#center-time {
+  font-size: 68px;
+  font-weight: bold;
+  color: #ffffff;
+  display: block;
 }
 
-#center-clock .date-icon {
-color: #4aa8ff;
+#center-date {
+  font-size: 24px;
+  font-weight: 300;
+  color: #cccccc;
+  display: block;
 }
 
 /* PERBAIKAN: Style untuk tombol toggle di pojok kanan atas */
@@ -216,7 +218,7 @@ visibility:hidden;
 display: none;
 }
 #quote{
-    font-size:X-large;
+    font-size:x-large;
     margin-top:20px;
     margin-bottom:-30px;	
 }
@@ -238,10 +240,13 @@ display: none;
 </head>
 <body class="dark">
 <main>
-<div id="quote">"Quotes & Jadwal disini"</div>
 <div id="mainText"><strong>—</strong><span><i></i></span></div>
 <div class="progress"><i id="intervalProgress"></i></div>
 
+
+<span><div class="status-bar" style="color:gray;margin-top:0px;margin-bottom:0px;font-size: 12px;">
+<span >📅 JADWAL SHOLAT KABPUATEN SLEMAN YOGAKARTA</span>
+</div></span>
 <!-- Jadwal Sholat 5 Waktu -->
 <div id="prayer-schedule">
     <div class="prayer-time">
@@ -266,20 +271,17 @@ display: none;
     </div>
 </div>
 
-<span><div class="status-bar" style="color:gray;margin-top:0px;margin-bottom:30px;font-size: 12px;">
-<span >📅 JADWAL SHOLAT KABPUATEN SLEMAN YOGAKARTA</span>
-</div></span>
+
 
 <!-- PERBAIKAN: Tambahkan jam di tengah halaman -->
 <div id="center-clock">
-<span class="time-icon">🕒</span>
-<span id="center-time">--:--</span>
-<span class="date-icon">📅</span>
-<span id="center-date">--- ---- ----</span>
+  <span id="center-time">--:--</span>
+  <span id="center-date">--- ---- ----</span>
 </div>
-
 <!-- PERBAIKAN: Tombol toggle di pojok kanan atas -->
 <button id="toggleTheme">🌓</button>
+<div id="quote">"Quotes & Jadwal disini"</div>
+
 </main>
 
 <!-- Grafik Jadwal Sholat -->
@@ -432,7 +434,7 @@ const now = new Date();
 
 // Format untuk tengah halaman (12 jam AM/PM tanpa detik)
 let hours12 = now.getHours();
-const ampm = hours12 >= 12 ? 'PM' : 'AM';
+const ampm = hours12 >= 12 ? '' : '';
 hours12 = hours12 % 12;
 hours12 = hours12 ? hours12 : 12; // 0 harus diubah menjadi 12
 const minutes12 = pad(now.getMinutes());

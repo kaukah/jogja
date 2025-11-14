@@ -18,8 +18,8 @@ body{display:flex;align-items:center;justify-content:center;text-align:center;pa
 #mainText{font-size:clamp(32px,8vw,80px);font-weight:700;line-height:1.2;margin-bottom:20px;margin-top:80px}
 #mainText span{color:#FFAA00;font-weight:400}
 .progress {
-width: 80vw; /* PERBAIKAN: 80vw dari lebar layar */
-height: 30px;
+width: 60vw; /* PERBAIKAN: 80vw dari lebar layar */
+height: 15px;
 background: rgba(255,255,255,0.1);
 border-radius: 999px;
 overflow: hidden;
@@ -202,12 +202,13 @@ flex: 1;
 
 .prayer-name {
 font-size: 16px;
-margin-bottom: 5px;
+margin-bottom: 15px;
+letter-spacing: 4px;
 color: #FFAA00;
 }
 
 .prayer-clock {
-font-size: 24px;
+font-size: 44px;
 font-weight: bold;
 }
 
@@ -244,8 +245,8 @@ display: none;
 <div class="progress"><i id="intervalProgress"></i></div>
 
 
-<span><div class="status-bar" style="color:gray;margin-top:0px;margin-bottom:0px;font-size: 12px;">
-<span >📅 JADWAL SHOLAT KABPUATEN SLEMAN YOGAKARTA</span>
+<span><div class="status-bar" style="color:gray;margin-top:50px;margin-bottom:0px;font-size: 18px;FONT-WEIGHT:900">
+<span >🕌 JADWAL SHOLAT SLEMAN</span>
 </div></span>
 <!-- Jadwal Sholat 5 Waktu -->
 <div id="prayer-schedule">
@@ -434,7 +435,7 @@ const now = new Date();
 
 // Format untuk tengah halaman (12 jam AM/PM tanpa detik)
 let hours12 = now.getHours();
-const ampm = hours12 >= 12 ? '' : '';
+const ampm = hours12 >= 12 ? 'PM' : 'AM';
 hours12 = hours12 % 12;
 hours12 = hours12 ? hours12 : 12; // 0 harus diubah menjadi 12
 const minutes12 = pad(now.getMinutes());
@@ -571,80 +572,6 @@ if (now >= adzanTime && now < new Date(adzanTime.getTime() + 60000)) {
         lastAdzanTime = new Date(adzanTime); // Simpan waktu adzan terakhir
     }
 }
-}
-}
-
-// =============================
-// BATTERY INFO (lengkap)
-// =============================
-function initBattery() {
-const el = document.querySelector('.battery');
-if (!navigator.getBattery) {
-el.textContent = "-";
-return;
-}
-navigator.getBattery().then(function(battery) {
-function updateBattery() {
-let level = Math.round(battery.level * 100);
-let charging = battery.charging ? "Charging" : "Not Charging";
-let time = "";
-if (battery.charging && battery.chargingTime !== Infinity) {
-let h = Math.floor(battery.chargingTime / 3600);
-let m = Math.floor((battery.chargingTime % 3600) / 60);
-time = `Baterai Full: ${h} jam ${m} menit`;
-} else if (!battery.charging && battery.dischargingTime !== Infinity) {
-let h = Math.floor(battery.dischargingTime / 3600);
-let m = Math.floor((battery.dischargingTime % 3600) / 60);
-time = ` ${h} jam ${m} menit`;
-}
-el.innerHTML = `
-<div>🔋 ${level}% ⚡ ${charging} ⏳ ${time}</div>
-`;
-}
-updateBattery();
-battery.addEventListener('levelchange', updateBattery);
-battery.addEventListener('chargingchange', updateBattery);
-battery.addEventListener('chargingtimechange', updateBattery);
-battery.addEventListener('dischargingtimechange', updateBattery);
-});
-}
-
-// =============================
-// INTERNET INFO (lengkap)
-// =============================
-function initInternetInfo() {
-const speedEl = document.querySelector('.internet-speed');
-if (!speedEl) return;
-
-function updateInfo() {
-const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-let downlink = conn ? `${conn.downlink} Mbps` : "-";
-let connInfo = conn ?
-`${conn.effectiveType.toUpperCase()} • 🔴 ${conn.rtt} ms `
-: "-";
-
-speedEl.innerHTML = `
-<div>🚀 ${downlink} • 🌐 ${connInfo} </div>
-`;
-}
-
-updateInfo();
-window.addEventListener('online', updateInfo);
-window.addEventListener('offline', updateInfo);
-if (navigator.connection) navigator.connection.addEventListener('change', updateInfo);
-}
-
-// =============================
-// IP INFO
-// =============================
-async function initIP() {
-const el = document.querySelector('.ip-info');
-try {
-const res = await fetch("https://api.ipify.org?format=json");
-const data = await res.json();
-el.innerHTML = `🌎 IP: ${data.ip}`;
-} catch (err) {
-el.innerHTML = "🌎 IP: Error";
 }
 }
 

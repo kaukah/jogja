@@ -170,6 +170,15 @@ border-radius: 50%;
   display: block;
 }
 
+/* PERBAIKAN: Tambahkan style untuk nama hari */
+#center-day {
+  font-size: 24px;
+  font-weight: 400;
+  color: #FFAA00;
+  display: inline;
+  margin-right: 5px;
+}
+
 /* PERBAIKAN: Style untuk tombol toggle di pojok kanan atas */
 #toggleTheme {
 position: absolute;
@@ -248,11 +257,15 @@ display: none;
 <span><div class="status-bar" style="color:gray;margin-top:50px;margin-bottom:0px;font-size: 18px;FONT-WEIGHT:900">
 <span >🕌 JADWAL SHOLAT SLEMAN</span>
 </div></span>
-<!-- Jadwal Sholat 5 Waktu -->
+<!-- Jadwal Sholat 6 Waktu (ditambahkan TERBIT) -->
 <div id="prayer-schedule">
     <div class="prayer-time">
         <div class="prayer-name">SUBUH</div>
         <div class="prayer-clock" id="subuh-time">--:--</div>
+    </div>
+    <div class="prayer-time">
+        <div class="prayer-name">TERBIT</div>
+        <div class="prayer-clock" id="terbit-time">--:--</div>
     </div>
     <div class="prayer-time">
         <div class="prayer-name">DHUHUR</div>
@@ -277,7 +290,7 @@ display: none;
 <!-- PERBAIKAN: Tambahkan jam di tengah halaman -->
 <div id="center-clock">
   <span id="center-time">--:--</span>
-  <span id="center-date">--- ---- ----</span>
+  <span id="center-date"><span id="center-day">-----</span> --- ---- ----</span>
 </div>
 <!-- PERBAIKAN: Tombol toggle di pojok kanan atas -->
 <button id="toggleTheme">🌓</button>
@@ -441,22 +454,26 @@ hours12 = hours12 ? hours12 : 12; // 0 harus diubah menjadi 12
 const minutes12 = pad(now.getMinutes());
 document.getElementById('center-time').textContent = `${hours12}:${minutes12} ${ampm}`;
 
-// Format tanggal
+// Format tanggal dengan nama hari di depan
+const dayNames = ['AHAD', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
 const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+const dayName = dayNames[now.getDay()];
 const day = now.getDate();
 const month = monthNames[now.getMonth()];
 const year = now.getFullYear();
-document.getElementById('center-date').textContent = `${day} ${month} ${year}`;
+document.getElementById('center-day').textContent = dayName;
+document.getElementById('center-date').innerHTML = `<span id="center-day">${dayName}</span> ${day} ${month} ${year}`;
 }
 
 // =============================
-// UPDATE JADWAL SHOLAT 5 WAKTU
+// UPDATE JADWAL SHOLAT 6 WAKTU (ditambahkan TERBIT)
 // =============================
 function updatePrayerSchedule() {
 const now = nowJakarta();
 const today = getTodayTimes(now);
 if (today) {
 document.getElementById('subuh-time').textContent = today.Shubuh;
+document.getElementById('terbit-time').textContent = today.Terbit; // Tambahkan TERBIT
 document.getElementById('dhuhur-time').textContent = today.Dzuhur;
 document.getElementById('ashar-time').textContent = today.Ashr;
 document.getElementById('magrib-time').textContent = today.Maghrib;
@@ -477,7 +494,7 @@ document.getElementById('mainText').innerHTML = '<strong>Jadwal tidak tersedia</
 return;
 }
 
-// Update jadwal sholat 5 waktu
+// Update jadwal sholat 6 waktu
 updatePrayerSchedule();
 
 // default prev/next
@@ -576,6 +593,80 @@ if (now >= adzanTime && now < new Date(adzanTime.getTime() + 60000)) {
 }
 
 // =============================
+// BATTERY INFO (lengkap)
+// =============================
+function initBattery() {
+const el = document.querySelector('.battery');
+if (!navigator.getBattery) {
+el.textContent = "-";
+return;
+}
+navigator.getBattery().then(function(battery) {
+function updateBattery() {
+let level = Math.round(battery.level * 100);
+let charging = battery.charging ? "Charging" : "Not Charging";
+let time = "";
+if (battery.charging && battery.chargingTime !== Infinity) {
+let h = Math.floor(battery.chargingTime / 3600);
+let m = Math.floor((battery.chargingTime % 3600) / 60);
+time = `Baterai Full: ${h} jam ${m} menit`;
+} else if (!battery.charging && battery.dischargingTime !== Infinity) {
+let h = Math.floor(battery.dischargingTime / 3600);
+let m = Math.floor((battery.dischargingTime % 3600) / 60);
+time = ` ${h} jam ${m} menit`;
+}
+el.innerHTML = `
+<div>🔋 ${level}% ⚡ ${charging} ⏳ ${time}</div>
+`;
+}
+updateBattery();
+battery.addEventListener('levelchange', updateBattery);
+battery.addEventListener('chargingchange', updateBattery);
+battery.addEventListener('chargingtimechange', updateBattery);
+battery.addEventListener('dischargingtimechange', updateBattery);
+});
+}
+
+// =============================
+// INTERNET INFO (lengkap)
+// =============================
+function initInternetInfo() {
+const speedEl = document.querySelector('.internet-speed');
+if (!speedEl) return;
+
+function updateInfo() {
+const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+let downlink = conn ? `${conn.downlink} Mbps` : "-";
+let connInfo = conn ?
+`${conn.effectiveType.toUpperCase()} • 🔴 ${conn.rtt} ms `
+: "-";
+
+speedEl.innerHTML = `
+<div>🚀 ${downlink} • 🌐 ${connInfo} </div>
+`;
+}
+
+updateInfo();
+window.addEventListener('online', updateInfo);
+window.addEventListener('offline', updateInfo);
+if (navigator.connection) navigator.connection.addEventListener('change', updateInfo);
+}
+
+// =============================
+// IP INFO
+// =============================
+async function initIP() {
+const el = document.querySelector('.ip-info');
+try {
+const res = await fetch("https://api.ipify.org?format=json");
+const data = await res.json();
+el.innerHTML = `🌎 IP: ${data.ip}`;
+} catch (err) {
+el.innerHTML = "🌎 IP: Error";
+}
+}
+
+// =============================
 // GRAFIK JADWAL SHOLAT - VERSI RINGAN UNTUK SMART TV
 // =============================
 // Fungsi untuk mengumpulkan data jadwal sholat selama setahun
@@ -600,11 +691,11 @@ let prayerTime;
 // PERBAIKAN: Tambahkan penanganan untuk "Terbit"
 switch(prayerName) {
 case 'Subuh': prayerTime = times.Shubuh; break;
+case 'Terbit': prayerTime = times.Terbit; break;
 case 'Dhuhur': prayerTime = times.Dzuhur; break;
 case 'Ashar': prayerTime = times.Ashr; break;
 case 'Magrib': prayerTime = times.Maghrib; break;
 case 'Isya': prayerTime = times.Isya; break;
-case 'Terbit': prayerTime = times.Terbit; break; // TAMBAHKAN INI
 }
 
 if (prayerTime) {
